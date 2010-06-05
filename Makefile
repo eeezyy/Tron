@@ -1,5 +1,5 @@
-# Makefile for tron
-VERSION=2.0.0
+# Makefile for tron (C++)
+VERSION=3.0.0
 CFLAGS=-g -Wall -O
 
 
@@ -14,18 +14,20 @@ tron.o: tron.cpp lightcycle.h
 clean:
 	rm -f ./tron
 	rm -f ./tron.o
+	rm -f ./tron.log
 
 check: tron
-	./tron -x 15 -y 8 0 0 typ1
+	./tron -x 15 -y 8 0 0 typ1 3 9 typ1
 	
 dist: all distclean
-	mkdir ../tron-${VERSION}/
-	cp * ../tron-${VERSION}/
-	tar cvzf ./tron-${VERSION}.tgz ../tron-${VERSION}
-	rm -r ../tron-${VERSION}/
+	@mkdir ../tron-${VERSION}/
+	@cp * ../tron-${VERSION}/
+	@tar cvzf ./tron-${VERSION}.tgz ../tron-${VERSION}
+	@rm -r ../tron-${VERSION}/
 
 distclean:
-	rm -f ./tron-${VERSION}.tgz
-	rm -f ./*~
-	rm -f ./tron.o
+	@rm -f ./tron-${VERSION}.tgz
+	@rm -f ./*~
+	@rm -f ./tron.o
+	@rm -f ./tron.log
 
