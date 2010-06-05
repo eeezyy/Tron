@@ -6,14 +6,17 @@ CFLAGS=-g -Wall -O
 all: tron
 
 tron: tron.o
-	gcc ${CFLAGS} -lpthread -o tron tron.o
+	g++ ${CFLAGS} -lpthread -o tron tron.o
 
-tron.o: tron.c
-	gcc ${CFLAGS} -c -lpthread tron.c
+tron.o: tron.cpp lightcycle.h
+	g++ ${CFLAGS} -c -lpthread tron.cpp
 
 clean:
 	rm -f ./tron
 	rm -f ./tron.o
+
+check: tron
+	./tron -x 15 -y 8 0 0 typ1
 	
 dist: all distclean
 	mkdir ../tron-${VERSION}/
