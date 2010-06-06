@@ -1,30 +1,5 @@
 #include "lightcycle.h"
 
-//field data = {PTHREAD_MUTEX_INITIALIZER, PTHREAD_COND_INITIALIZER, 0};
-
-char *program_name = NULL;
-field **grid = NULL;
-
-FILE *output;
-pthread_mutex_t file_mutex = PTHREAD_MUTEX_INITIALIZER;
-
-int dimX;
-int dimY;
-int count_player;
-int number_player;
-int *player_posX;
-int *player_posY;
-char **player_typ;
-int *player_typ_nr;
-int *player_count_steps;
-
-pthread_mutex_t count_mutex = PTHREAD_MUTEX_INITIALIZER;
-pthread_cond_t count_threshold_cv;
-
-void *print_grid(void *t);
-void *cycle(void *t);
-void *cycle2(void *t);
-
 int main(int argc, char *argv[]) {
 	int c;
 	int isSetDimX = 0;
@@ -165,13 +140,16 @@ int main(int argc, char *argv[]) {
 	// open logfile
 	output = fopen(FILENAME, "w");
 	
+	Lightcycle *cycle;
 	for(i = 0; i < count_player; i++) {
 		switch(player_typ_nr[i]){
 			case 1:
-				pthread_create(&threads[i+1], &attr, cycle, (void *)(i+1));
+				cycle = new Lightcycle1();
+				pthread_create(&threads[i+1], &attr, &cycle->compute, (void *)(i+1));
 				break;
 			/*case 2:
-				pthread_create(&threads[i+1], &attr, cycle2, (void *)(i+1));
+				cycle = (Lightcycle)new Lightcycle2();
+				pthread_create(&threads[i+1], &attr, cycle.compute, (void *)(i+1));
 				break;*/
 		}
 	}
@@ -205,174 +183,3 @@ void *print_grid(void *t){
 	}	
 }
 
-void *cycle(void *t){
-	int player_id = (int)t-1;
-	int status;
-	// check if no field is empty
-	int isSet;
-	status = pthread_mutex_lock(&grid[player_posY[player_id]][player_posX[player_id]].mutex);
-	grid[player_posY[player_id]][player_posX[player_id]].value=(player_id+65);
-	status = pthread_cond_signal(&grid[player_posY[player_id]][player_posX[player_id]].cond);
-	status = pthread_mutex_unlock(&grid[player_posY[player_id]][player_posX[player_id]].mutex);
-	player_count_steps[player_id] = 1;
-	usleep(SPEED);
-	while(1){
-		// left
-		if(player_posX[player_id]!=0 && grid[player_posY[player_id]][player_posX[player_id] -1 ].value == '.'){
-			status = pthread_mutex_lock(&grid[player_posY[player_id]][player_posX[player_id] -1 ].mutex);
-			player_posX[player_id] -= 1;
-			isSet = 1;
-		// up
-		} else if (player_posY[player_id]!=0 && grid[player_posY[player_id] -1 ][player_posX[player_id]].value == '.'){
-			status = pthread_mutex_lock(&grid[player_posY[player_id] -1 ][player_posX[player_id]].mutex);
-			player_posY[player_id] -= 1;
-			isSet = 1;
-		// right
-		} else if (player_posX[player_id]!=dimX-1 && grid[player_posY[player_id]][player_posX[player_id] +1 ].value == '.'){
-			status = pthread_mutex_lock(&grid[player_posY[player_id]][player_posX[player_id] +1 ].mutex);
-			player_posX[player_id] += 1;
-			isSet = 1;
-		// down
-		} else if (player_posY[player_id]!=dimY-1 && grid[player_posY[player_id] +1 ][player_posX[player_id]].value == '.'){
-			status = pthread_mutex_lock(&grid[player_posY[player_id] +1 ][player_posX[player_id]].mutex);
-			player_posY[player_id] += 1;
-			isSet = 1;
-		}
-		// comment if-statement for excercise 6
-		if(count_player<=1){
-			grid[player_posY[player_id]][player_posX[player_id]].value=(player_id+65);
-			count_player -= 1;
-			
-			player_count_steps[player_id]++;
-			int i;
-			while(1) {
-				for(i = 0; i < number_player; i++) {
-					if(player_count_steps[i]>player_count_steps[player_id]) {
-						// verlierer
-						pthread_mutex_lock(&file_mutex);
-						fprintf(output, "Lichtrenner %c terminiert auf Position %i,%i (Thread %i).\n", player_id+65, player_posX[player_id], player_posY[player_id], player_id+1);
-						fflush(output);
-						pthread_mutex_unlock(&file_mutex);
-						return 0;	
-					} else if(count_player<=1 && i==number_player-1){
-						// sieger
-						pthread_mutex_lock(&file_mutex);
-						fprintf(output, "Lichtrenner %c verbleibt auf Position %i,%i (Thread %i).\n", player_id+65, player_posX[player_id], player_posY[player_id], player_id+1);
-						fflush(output);
-						pthread_mutex_unlock(&file_mutex);
-						return 0;
-					} else if(count_player<0 && i==number_player-1){
-						// kein sieger
-						pthread_mutex_lock(&file_mutex);
-						fprintf(output, "Kein Lichtrenner verbleibt am Grid.\n");
-						fflush(output);
-						pthread_mutex_unlock(&file_mutex);
-						return 0;	
-					}
-				}
-				usleep(SPEED);
-			}
-			status = pthread_cond_signal(&grid[player_posY[player_id]][player_posX[player_id]].cond);
-			status = pthread_mutex_unlock(&grid[player_posY[player_id]][player_posX[player_id]].mutex);
-		}
-		if(!isSet){
-			grid[player_posY[player_id]][player_posX[player_id]].value=(player_id+97);
-			count_player -= 1;
-			
-			player_count_steps[player_id]++;
-			int i;
-			while(1) {
-				for(i = 0; i < number_player; i++) {
-					if(player_count_steps[i]>player_count_steps[player_id]) {
-						// verlierer
-						pthread_mutex_lock(&file_mutex);
-						fprintf(output, "Lichtrenner %c terminiert auf Position %i,%i (Thread %i).\n", player_id+65, player_posX[player_id], player_posY[player_id], player_id+1);
-						fflush(output);
-						pthread_mutex_unlock(&file_mutex);
-						return 0;	
-					} else if(count_player<=1 && i==number_player-1){
-						// sieger
-						pthread_mutex_lock(&file_mutex);
-						fprintf(output, "Lichtrenner %c terminiert auf Position %i,%i (Thread %i).\n", player_id+65, player_posX[player_id], player_posY[player_id], player_id+1);
-						fflush(output);
-						pthread_mutex_unlock(&file_mutex);
-						return 0;
-					} else if(count_player<1 && i==number_player-1){
-						// kein sieger
-						pthread_mutex_lock(&file_mutex);
-						fprintf(output, "Lichtrenner %c terminiert auf Position %i,%i (Thread %i).\n", player_id+65, player_posX[player_id], player_posY[player_id], player_id+1);
-						fprintf(output, "Kein Lichtrenner verbleibt am Grid.\n");
-						fflush(output);
-						pthread_mutex_unlock(&file_mutex);
-						//fprintf(output, "
-						return 0;	
-					}
-				}
-				usleep(SPEED);
-			}
-			status = pthread_cond_signal(&grid[player_posY[player_id]][player_posX[player_id]].cond);
-			status = pthread_mutex_unlock(&grid[player_posY[player_id]][player_posX[player_id]].mutex);
-		}
-		grid[player_posY[player_id]][player_posX[player_id]].value=(player_id+65);
-		isSet = 0;
-		status = pthread_cond_signal(&grid[player_posY[player_id]][player_posX[player_id]].cond);
-		status = pthread_mutex_unlock(&grid[player_posY[player_id]][player_posX[player_id]].mutex);
-		player_count_steps[player_id]++;
-		usleep(SPEED);
-	}
-	return NULL;
-}
-
-// Test typ2 
-/*void *cycle2(void *t){
-	int player_id = (int)t-1;
-	int status;
-	// check if no field is empty
-	int isSet;
-	status = pthread_mutex_lock(&grid[player_posY[player_id]][player_posX[player_id]].mutex);
-	grid[player_posY[player_id]][player_posX[player_id]].value=(player_id+65);
-	status = pthread_mutex_unlock(&grid[player_posY[player_id]][player_posX[player_id]].mutex);
-	if (status != 0)
-	while(1){
-		status = pthread_mutex_lock(&grid[player_posY[player_id]][player_posX[player_id] -1 ].mutex);
-		status = pthread_mutex_lock(&grid[player_posY[player_id] -1 ][player_posX[player_id]].mutex);
-		status = pthread_mutex_lock(&grid[player_posY[player_id]][player_posX[player_id] +1 ].mutex);
-		status = pthread_mutex_lock(&grid[player_posY[player_id] +1 ][player_posX[player_id]].mutex);
-		// down
-		 if (player_posY[player_id]!=dimY-1 && grid[player_posY[player_id] +1 ][player_posX[player_id]].value == '.'){
-			player_posY[player_id] += 1;
-			isSet = 1;
-		// right
-		} else if (player_posX[player_id]!=dimX-1 && grid[player_posY[player_id]][player_posX[player_id] +1 ].value == '.'){
-			player_posX[player_id] += 1;
-			isSet = 1;
-		// up
-		} else if (player_posY[player_id]!=0 && grid[player_posY[player_id] -1 ][player_posX[player_id]].value == '.'){
-			player_posY[player_id] -= 1;
-			isSet = 1;
-		// left
-		} else if(player_posX[player_id]!=0 && grid[player_posY[player_id]][player_posX[player_id] -1 ].value == '.'){
-			player_posX[player_id] -= 1;
-			isSet = 1;
-		}
-		if(count_player==1){
-			grid[player_posY[player_id]][player_posX[player_id]].value=(player_id+65);
-			count_player -= 1;
-			return 0;
-		}
-		if(!isSet){
-			grid[player_posY[player_id]][player_posX[player_id]].value=(player_id+97);
-			count_player -= 1;
-			return 0;	
-		}
-		grid[player_posY[player_id]][player_posX[player_id]].value=(player_id+65);
-		isSet = 0;
-		status = pthread_mutex_unlock(&grid[player_posY[player_id]][player_posX[player_id] -1 ].mutex);
-		status = pthread_mutex_unlock(&grid[player_posY[player_id] -1 ][player_posX[player_id]].mutex);
-		status = pthread_mutex_unlock(&grid[player_posY[player_id]][player_posX[player_id] +1 ].mutex);
-		status = pthread_mutex_unlock(&grid[player_posY[player_id] +1 ][player_posX[player_id]].mutex);
-		//if (status != 0)
-		usleep(SPEED);
-	}
-	return NULL;
-}*/
