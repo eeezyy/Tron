@@ -140,27 +140,41 @@ int main(int argc, char *argv[]) {
 	// open logfile
 	output = fopen(FILENAME, "w");
 	
-	Lightcycle *cycle;
+	// initialize cycle object with correct type
+
+	// type with cycle and id to pass to thread
+	threadcycle *t_cycle;
 	for(i = 0; i < count_player; i++) {
 		switch(player_typ_nr[i]){
 			case 1:
-				cycle = new Lightcycle1();
-				pthread_create(&threads[i+1], &attr, &cycle->compute, (void *)(i+1));
+				t_cycle = (threadcycle *)malloc(sizeof(threadcycle));
+				t_cycle->cycle = new Lightcycle1;
+				t_cycle->id = i+1;
+				pthread_create(&threads[i+1], &attr, startThread, (void *)(t_cycle));
 				break;
-			/*case 2:
-				cycle = (Lightcycle)new Lightcycle2();
-				pthread_create(&threads[i+1], &attr, cycle.compute, (void *)(i+1));
-				break;*/
+			case 2:
+				t_cycle = (threadcycle *)malloc(sizeof(threadcycle));
+				t_cycle->cycle = new Lightcycle2();
+				t_cycle->id = i+1;
+				pthread_create(&threads[i+1], &attr, startThread, (void *)(t_cycle));
+				break;
 		}
 	}
 	// show view after cycles set position
-	pthread_create(&threads[0], &attr, print_grid, (void *)0);
+	//pthread_create(&threads[0], &attr, print_grid, (void *)0);
+	pthread_create(&threads[0], &attr, print_grid, NULL);
 	/* Wait for all threads to complete */
 	for (i = 0; i < count_player+1; i++) {
 		pthread_join(threads[i], NULL);
 	}
 	fclose(output);
 	return EXIT_SUCCESS;
+}
+
+void *startThread(void *t) {
+	threadcycle *cycle = (threadcycle *)t;
+	cycle->cycle->compute(cycle->id);
+	return 0;
 }
 
 void *print_grid(void *t){

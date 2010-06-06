@@ -5,7 +5,7 @@
 #include <string.h>
 
 #define TYP_SIZE 5
-#define TYPES 1
+#define TYPES 2
 #define REFRESH 300000
 #define SPEED 300000
 #define FILENAME "tron.log"
@@ -37,6 +37,7 @@ int *player_count_steps;
 pthread_mutex_t count_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t count_threshold_cv;
 
+void *startThread(void *t);
 void *print_grid(void *t);
 void *cycle(void *t);
 void *cycle2(void *t);

@@ -3,14 +3,20 @@
 class Lightcycle {
 	public:
 
-	virtual void *compute(void *t) = 0;
+	virtual void compute(int t) = 0;
 };
+
+typedef struct t_cycle {
+	Lightcycle *cycle;
+	int id;
+} threadcycle;
 
 class Lightcycle1 : public Lightcycle {
 	public:
 	
-	void *compute(void *t) {
-		int player_id = (int)t-1;
+	void compute(int t) {
+		//int player_id = (int)t-1;
+		int player_id = t-1;
 		int status;
 		// check if no field is empty
 		int isSet;
@@ -57,21 +63,21 @@ class Lightcycle1 : public Lightcycle {
 							fprintf(output, "Lichtrenner %c terminiert auf Position %i,%i (Thread %i).\n", player_id+65, player_posX[player_id], player_posY[player_id], player_id+1);
 							fflush(output);
 							pthread_mutex_unlock(&file_mutex);
-							return 0;	
+							return;	
 						} else if(count_player<=1 && i==number_player-1){
 							// sieger
 							pthread_mutex_lock(&file_mutex);
 							fprintf(output, "Lichtrenner %c verbleibt auf Position %i,%i (Thread %i).\n", player_id+65, player_posX[player_id], player_posY[player_id], player_id+1);
 							fflush(output);
 							pthread_mutex_unlock(&file_mutex);
-							return 0;
+							return;
 						} else if(count_player<0 && i==number_player-1){
 							// kein sieger
 							pthread_mutex_lock(&file_mutex);
 							fprintf(output, "Kein Lichtrenner verbleibt am Grid.\n");
 							fflush(output);
 							pthread_mutex_unlock(&file_mutex);
-							return 0;	
+							return;	
 						}
 					}
 					usleep(SPEED);
@@ -93,14 +99,14 @@ class Lightcycle1 : public Lightcycle {
 							fprintf(output, "Lichtrenner %c terminiert auf Position %i,%i (Thread %i).\n", player_id+65, player_posX[player_id], player_posY[player_id], player_id+1);
 							fflush(output);
 							pthread_mutex_unlock(&file_mutex);
-							return 0;	
+							return;	
 						} else if(count_player<=1 && i==number_player-1){
 							// sieger
 							pthread_mutex_lock(&file_mutex);
 							fprintf(output, "Lichtrenner %c terminiert auf Position %i,%i (Thread %i).\n", player_id+65, player_posX[player_id], player_posY[player_id], player_id+1);
 							fflush(output);
 							pthread_mutex_unlock(&file_mutex);
-							return 0;
+							return;
 						} else if(count_player<1 && i==number_player-1){
 							// kein sieger
 							pthread_mutex_lock(&file_mutex);
@@ -109,7 +115,7 @@ class Lightcycle1 : public Lightcycle {
 							fflush(output);
 							pthread_mutex_unlock(&file_mutex);
 							//fprintf(output, "
-							return 0;	
+							return;	
 						}
 					}
 					usleep(SPEED);
@@ -124,14 +130,14 @@ class Lightcycle1 : public Lightcycle {
 			player_count_steps[player_id]++;
 			usleep(SPEED);
 		}
-		return NULL;
+		return;
 	}
 };
 
 class Lightcycle2 : public Lightcycle {
 	public:
 	
-	void *compute(void *t) {
+	void compute(int t) {
 		int player_id = (int)t-1;
 		int status;
 		// check if no field is empty
@@ -179,21 +185,21 @@ class Lightcycle2 : public Lightcycle {
 							fprintf(output, "Lichtrenner %c terminiert auf Position %i,%i (Thread %i).\n", player_id+65, player_posX[player_id], player_posY[player_id], player_id+1);
 							fflush(output);
 							pthread_mutex_unlock(&file_mutex);
-							return 0;	
+							return;
 						} else if(count_player<=1 && i==number_player-1){
 							// sieger
 							pthread_mutex_lock(&file_mutex);
 							fprintf(output, "Lichtrenner %c verbleibt auf Position %i,%i (Thread %i).\n", player_id+65, player_posX[player_id], player_posY[player_id], player_id+1);
 							fflush(output);
 							pthread_mutex_unlock(&file_mutex);
-							return 0;
+							return;
 						} else if(count_player<0 && i==number_player-1){
 							// kein sieger
 							pthread_mutex_lock(&file_mutex);
 							fprintf(output, "Kein Lichtrenner verbleibt am Grid.\n");
 							fflush(output);
 							pthread_mutex_unlock(&file_mutex);
-							return 0;	
+							return;	
 						}
 					}
 					usleep(SPEED);
@@ -215,14 +221,14 @@ class Lightcycle2 : public Lightcycle {
 							fprintf(output, "Lichtrenner %c terminiert auf Position %i,%i (Thread %i).\n", player_id+65, player_posX[player_id], player_posY[player_id], player_id+1);
 							fflush(output);
 							pthread_mutex_unlock(&file_mutex);
-							return 0;	
+							return;	
 						} else if(count_player<=1 && i==number_player-1){
 							// sieger
 							pthread_mutex_lock(&file_mutex);
 							fprintf(output, "Lichtrenner %c terminiert auf Position %i,%i (Thread %i).\n", player_id+65, player_posX[player_id], player_posY[player_id], player_id+1);
 							fflush(output);
 							pthread_mutex_unlock(&file_mutex);
-							return 0;
+							return;
 						} else if(count_player<1 && i==number_player-1){
 							// kein sieger
 							pthread_mutex_lock(&file_mutex);
@@ -231,7 +237,7 @@ class Lightcycle2 : public Lightcycle {
 							fflush(output);
 							pthread_mutex_unlock(&file_mutex);
 							//fprintf(output, "
-							return 0;	
+							return;	
 						}
 					}
 					usleep(SPEED);
@@ -246,6 +252,6 @@ class Lightcycle2 : public Lightcycle {
 			player_count_steps[player_id]++;
 			usleep(SPEED);
 		}
-		return NULL;
+		return;
 	}
 };
